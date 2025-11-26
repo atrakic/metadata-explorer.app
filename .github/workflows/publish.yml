@@ -13,13 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Build the site
-      if: false
-      run: |
-        mkdir _site
-        echo '<h1>Hello, world!</h1>' > _site/index.html
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
+      with:
+        path: '_site'
   deploy:
     environment:
       name: github-pages
