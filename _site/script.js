@@ -77,7 +77,7 @@ function loadData(url) {
 }
 
 // Load default data on page load
-loadData('data.jsonld');
+loadData('https://raw.githubusercontent.com/atrakic/metadata-explorer.app/refs/heads/main/_site/data.jsonld');
 
 // Load button event listener
 document.getElementById('load-data').addEventListener('click', function () {
@@ -124,9 +124,7 @@ function jsonldToTurtle(data) {
         const valueStr = formatTurtleValue(value, '  ');
         props.push(`  ${predicate} ${valueStr}`);
     }
-
     turtle += props.join(' ;\n') + ' .\n';
-
     return turtle;
 }
 
