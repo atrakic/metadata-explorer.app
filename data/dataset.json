@@ -8,15 +8,14 @@
     "@type": "Dataset",
     "name": "Demo - Earthquakes in Europe",
     "description": "Demo dataset of seismic activity across Europe, including earthquake locations, magnitudes, depths, and temporal data. This dataset provides valuable information for researchers, emergency planners, and scientists studying seismic patterns and risks in the European region.",
-    "publisher": {
-        "@type": "Organization",
-        "name": "European-Mediterranean Seismological Centre"
-    },
+    "url":"https://data.europa.eu/data/earthquake-database",
+    "license" : "https://creativecommons.org/publicdomain/zero/1.0/",
     "spatialCoverage": {
         "@type": "Place",
         "name": "Europe"
     },
     "temporalCoverage": "2020/2025",
+    "isAccessibleForFree" : true,
     "hasPart": [
         {
             "@type": "Dataset",
