@@ -90,13 +90,19 @@ function isJSONLD(obj) {
 
 // Default context/type for plain JSON
 function genericLinkedData(obj) {
-    return {
+    const wrapped = {
         "@context": {
             "schema": "https://schema.org/"
         },
-        "@type": "Resource",
-        ...obj
+        "@type": "Resource"
     };
+    // Add all properties except @context and @type to avoid conflicts
+    for (const [key, value] of Object.entries(obj)) {
+        if (key !== '@context' && key !== '@type') {
+            wrapped[key] = value;
+        }
+    }
+    return wrapped;
 }
 
 function loadData(url) {
