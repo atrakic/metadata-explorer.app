@@ -81,7 +81,7 @@ td a {
     cursor: not-allowed;
 }
 
-#turtle-view {
+.format-view {
     display: none;
     background: #f5f5f5;
     padding: 1em;
@@ -90,7 +90,7 @@ td a {
     margin-top: 1.5em;
 }
 
-#turtle-view pre {
+.format-view pre {
     margin: 0;
     white-space: pre-wrap;
     word-wrap: break-word;
