@@ -39,6 +39,51 @@ let jsonldData = null;
 let currentFormat = 'table';
 let formatCache = {};
 
+// Cached DOM element references for performance (initialized when DOM is ready)
+let views = null;
+let buttons = null;
+let urlInput = null;
+
+function initializeDOMReferences() {
+    views = {
+        table: document.getElementById('dataset-table'),
+        turtle: document.getElementById('turtle-view'),
+        rdfxml: document.getElementById('rdfxml-view'),
+        ntriples: document.getElementById('ntriples-view'),
+        nquads: document.getElementById('nquads-view')
+    };
+    buttons = {
+        load: document.getElementById('load-data'),
+        download: document.getElementById('download'),
+        toggleTable: document.getElementById('toggle-table'),
+        toggleTurtle: document.getElementById('toggle-turtle'),
+        toggleRdfxml: document.getElementById('toggle-rdfxml'),
+        toggleNtriples: document.getElementById('toggle-ntriples'),
+        toggleNquads: document.getElementById('toggle-nquads')
+    };
+    urlInput = document.getElementById('data-url');
+
+    // Setup event listeners after DOM references are cached
+    buttons.toggleTable.addEventListener('click', function () {
+        showView('table');
+    });
+    buttons.toggleTurtle.addEventListener('click', function () {
+        showView('turtle');
+    });
+    buttons.toggleRdfxml.addEventListener('click', function () {
+        showView('rdfxml');
+    });
+    buttons.toggleNtriples.addEventListener('click', function () {
+        showView('ntriples');
+    });
+    buttons.toggleNquads.addEventListener('click', function () {
+        showView('nquads');
+    });
+    buttons.download.addEventListener('click', function () {
+        downloadCurrent();
+    });
+}
+
 function isJSONLD(obj) {
     return obj && (obj['@context'] || obj['@type']);
 }
@@ -55,21 +100,15 @@ function genericLinkedData(obj) {
 }
 
 function loadData(url) {
-    const loadBtn = document.getElementById('load-data');
-    const tableView = document.getElementById('dataset-table');
-    const turtleView = document.getElementById('turtle-view');
-    const rdfxmlView = document.getElementById('rdfxml-view');
-    const ntriplesView = document.getElementById('ntriples-view');
-    const nquadsView = document.getElementById('nquads-view');
-    document.getElementById('download').style.display = 'none';
+    buttons.download.style.display = 'none';
 
-    loadBtn.disabled = true;
-    loadBtn.textContent = 'Loading...';
-    tableView.innerHTML = 'Loading...';
-    turtleView.style.display = 'none';
-    rdfxmlView.style.display = 'none';
-    ntriplesView.style.display = 'none';
-    nquadsView.style.display = 'none';
+    buttons.load.disabled = true;
+    buttons.load.textContent = 'Loading...';
+    views.table.innerHTML = 'Loading...';
+    views.turtle.style.display = 'none';
+    views.rdfxml.style.display = 'none';
+    views.ntriples.style.display = 'none';
+    views.nquads.style.display = 'none';
 
     fetch(url)
         .then(response => response.json())
@@ -83,26 +122,27 @@ function loadData(url) {
                 html += `<tr><td>${key}</td><td>${renderValue(val)}</td></tr>`;
             });
             html += '</tbody></table>';
-            tableView.innerHTML = html;
-            loadBtn.disabled = false;
-            loadBtn.textContent = 'Load Data';
-            tableView.style.display = 'block';
-            turtleView.style.display = 'none';
-            rdfxmlView.style.display = 'none';
-            ntriplesView.style.display = 'none';
-            nquadsView.style.display = 'none';
+            views.table.innerHTML = html;
+            buttons.load.disabled = false;
+            buttons.load.textContent = 'Load Data';
+            views.table.style.display = 'block';
+            views.turtle.style.display = 'none';
+            views.rdfxml.style.display = 'none';
+            views.ntriples.style.display = 'none';
+            views.nquads.style.display = 'none';
             currentFormat = 'table';
-            document.getElementById('download').style.display = 'none';
+            buttons.download.style.display = 'none';
             // Always enable all toggles, since generic semantics are applied
-            ['toggle-turtle','toggle-rdfxml','toggle-ntriples','toggle-nquads'].forEach(id =>
-                document.getElementById(id).disabled = false
-            );
+            buttons.toggleTurtle.disabled = false;
+            buttons.toggleRdfxml.disabled = false;
+            buttons.toggleNtriples.disabled = false;
+            buttons.toggleNquads.disabled = false;
         })
         .catch(err => {
-            tableView.textContent = 'Failed to load data! Check the URL and try again.';
+            views.table.textContent = 'Failed to load data! Check the URL and try again.';
             console.error(err);
-            loadBtn.disabled = false;
-            loadBtn.textContent = 'Load Data';
+            buttons.load.disabled = false;
+            buttons.load.textContent = 'Load Data';
         });
 }
 
@@ -193,82 +233,62 @@ function jsonldToNQuads(data) {
     }
     window.jsonld.toRDF(data, { format: 'application/n-quads' })
         .then(nquads => {
-            document.getElementById('nquads-view').innerHTML = `<pre>${nquads}</pre>`;
+            views.nquads.innerHTML = `<pre>${nquads}</pre>`;
         })
         .catch(err => {
-            document.getElementById('nquads-view').innerHTML = `<pre>Error converting: ${err}</pre>`;
+            views.nquads.innerHTML = `<pre>Error converting: ${err}</pre>`;
         });
 }
 
-// UI Toggles
-document.getElementById('toggle-table').addEventListener('click', function () {
-    showView('table');
-});
-document.getElementById('toggle-turtle').addEventListener('click', function () {
-    showView('turtle');
-});
-document.getElementById('toggle-rdfxml').addEventListener('click', function () {
-    showView('rdfxml');
-});
-document.getElementById('toggle-ntriples').addEventListener('click', function () {
-    showView('ntriples');
-});
-document.getElementById('toggle-nquads').addEventListener('click', function () {
-    showView('nquads');
-});
-document.getElementById('download').addEventListener('click', function () {
-    downloadCurrent();
-});
-
 function showView(format) {
     if (!jsonldData) return;
-    document.getElementById('dataset-table').style.display = 'none';
-    document.getElementById('turtle-view').style.display = 'none';
-    document.getElementById('rdfxml-view').style.display = 'none';
-    document.getElementById('ntriples-view').style.display = 'none';
-    document.getElementById('nquads-view').style.display = 'none';
+    views.table.style.display = 'none';
+    views.turtle.style.display = 'none';
+    views.rdfxml.style.display = 'none';
+    views.ntriples.style.display = 'none';
+    views.nquads.style.display = 'none';
 
-    document.getElementById('download').style.display = format === 'table' ? 'none' : 'inline-block';
+    buttons.download.style.display = format === 'table' ? 'none' : 'inline-block';
     currentFormat = format;
 
     if (format === 'table') {
-        document.getElementById('dataset-table').style.display = 'block';
+        views.table.style.display = 'block';
     } else if (format === 'turtle') {
         if (!formatCache.turtle) formatCache.turtle = jsonldToTurtle(jsonldData);
-        const turtlePre = document.getElementById('turtle-view').querySelector('pre') || document.createElement('pre');
+        const turtlePre = views.turtle.querySelector('pre') || document.createElement('pre');
         turtlePre.textContent = formatCache.turtle;
-        if (!document.getElementById('turtle-view').contains(turtlePre)) {
-            document.getElementById('turtle-view').innerHTML = '';
-            document.getElementById('turtle-view').appendChild(turtlePre);
+        if (!views.turtle.contains(turtlePre)) {
+            views.turtle.innerHTML = '';
+            views.turtle.appendChild(turtlePre);
         }
-        document.getElementById('turtle-view').style.display = 'block';
+        views.turtle.style.display = 'block';
     } else if (format === 'rdfxml') {
         if (!formatCache.rdfxml) formatCache.rdfxml = turtleToRDF('rdfxml');
-        const rdfxmlPre = document.getElementById('rdfxml-view').querySelector('pre') || document.createElement('pre');
+        const rdfxmlPre = views.rdfxml.querySelector('pre') || document.createElement('pre');
         rdfxmlPre.textContent = formatCache.rdfxml;
-        if (!document.getElementById('rdfxml-view').contains(rdfxmlPre)) {
-            document.getElementById('rdfxml-view').innerHTML = '';
-            document.getElementById('rdfxml-view').appendChild(rdfxmlPre);
+        if (!views.rdfxml.contains(rdfxmlPre)) {
+            views.rdfxml.innerHTML = '';
+            views.rdfxml.appendChild(rdfxmlPre);
         }
-        document.getElementById('rdfxml-view').style.display = 'block';
+        views.rdfxml.style.display = 'block';
     } else if (format === 'ntriples') {
         if (!formatCache.ntriples) formatCache.ntriples = turtleToRDF('ntriples');
-        const ntriplesPre = document.getElementById('ntriples-view').querySelector('pre') || document.createElement('pre');
+        const ntriplesPre = views.ntriples.querySelector('pre') || document.createElement('pre');
         ntriplesPre.textContent = formatCache.ntriples;
-        if (!document.getElementById('ntriples-view').contains(ntriplesPre)) {
-            document.getElementById('ntriples-view').innerHTML = '';
-            document.getElementById('ntriples-view').appendChild(ntriplesPre);
+        if (!views.ntriples.contains(ntriplesPre)) {
+            views.ntriples.innerHTML = '';
+            views.ntriples.appendChild(ntriplesPre);
         }
-        document.getElementById('ntriples-view').style.display = 'block';
+        views.ntriples.style.display = 'block';
     } else if (format === 'nquads') {
-        const nquadsPre = document.getElementById('nquads-view').querySelector('pre') || document.createElement('pre');
+        const nquadsPre = views.nquads.querySelector('pre') || document.createElement('pre');
         nquadsPre.textContent = 'Loading...';
-        if (!document.getElementById('nquads-view').contains(nquadsPre)) {
-            document.getElementById('nquads-view').innerHTML = '';
-            document.getElementById('nquads-view').appendChild(nquadsPre);
+        if (!views.nquads.contains(nquadsPre)) {
+            views.nquads.innerHTML = '';
+            views.nquads.appendChild(nquadsPre);
         }
         jsonldToNQuads(jsonldData);
-        document.getElementById('nquads-view').style.display = 'block';
+        views.nquads.style.display = 'block';
     }
 }
 
@@ -285,7 +305,7 @@ function downloadCurrent() {
         data = formatCache.ntriples;
         ext = 'nt';
     } else if (currentFormat === 'nquads') {
-        data = document.getElementById('nquads-view').textContent;
+        data = views.nquads.textContent;
         ext = 'nq';
     }
     if (!data) return;
@@ -301,7 +321,7 @@ function downloadCurrent() {
 }
 
 function initializeApp() {
-    const urlInput = document.getElementById('data-url');
+    initializeDOMReferences();
     const defaultUrl = urlInput ? urlInput.value.trim() : '';
     if (defaultUrl) {
         loadData(defaultUrl);
