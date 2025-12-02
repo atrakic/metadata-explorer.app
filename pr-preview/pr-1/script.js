@@ -96,20 +96,6 @@ function initializeDOMReferences() {
     buttons.download.addEventListener('click', function () {
         downloadCurrent();
     });
-    buttons.load.addEventListener('click', function () {
-        const url = urlInput.value.trim();
-        if (url) {
-            loadData(url);
-        }
-    });
-    urlInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            const url = this.value.trim();
-            if (url) {
-                loadData(url);
-            }
-        }
-    });
 }
 
 function isJSONLD(obj) {
@@ -166,11 +152,20 @@ function loadData(url) {
             views.nquads.style.display = 'none';
             currentFormat = 'table';
             buttons.download.style.display = 'none';
-            // Always enable all toggles, since generic semantics are applied
+            // Enable toggles only if required libraries are loaded
             buttons.toggleTurtle.disabled = false;
-            buttons.toggleRdfxml.disabled = false;
-            buttons.toggleNtriples.disabled = false;
-            buttons.toggleNquads.disabled = false;
+            if (window.$rdf) {
+                buttons.toggleRdfxml.disabled = false;
+                buttons.toggleNtriples.disabled = false;
+            } else {
+                buttons.toggleRdfxml.disabled = true;
+                buttons.toggleNtriples.disabled = true;
+            }
+            if (window.jsonld) {
+                buttons.toggleNquads.disabled = false;
+            } else {
+                buttons.toggleNquads.disabled = true;
+            }
         })
         .catch(err => {
             views.table.textContent = 'Failed to load data! Check the URL and try again.';
