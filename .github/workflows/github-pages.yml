@@ -1,13 +1,9 @@
-## Disabled: This workflow is retained for documentation only. ##
-# It was previously used for GitHub Pages deployment via Actions (Pages v2).
-# Pages Classic does NOT use Actions workflows. See repo settings for deployment.
-# To reactivate, restore the original triggers under "on:" below.
 
-# on:
-#   push:
-#     branches:
-#       - main
-#   workflow_dispatch:
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   pages: write
