@@ -221,10 +221,9 @@ function formatTurtleValue(value, indent = '') {
             const items = value.map(v => formatTurtleValue(v, indent + '  ')).join(' ');
             return `(\n${indent}  ${items}\n${indent})`;
         } else {
-            // If array contains objects, emit as multiple triples (e.g., multiple predicates)
-            // Usually used for multiple property values
-            // Suppose this is used in props.push ... so do property for each item
-            return value.map(v => formatTurtleValue(v, indent)).join(` ;\n${indent}`);
+            // If array contains objects, multiple values for the same predicate
+            // are separated by commas in Turtle syntax
+            return value.map(v => formatTurtleValue(v, indent)).join(` ,\n${indent}`);
         }
     } else if (typeof value === "object" && value !== null) {
         if (value['@type']) {
