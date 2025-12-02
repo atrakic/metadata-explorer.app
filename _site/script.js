@@ -39,24 +39,50 @@ let jsonldData = null;
 let currentFormat = 'table';
 let formatCache = {};
 
-// Cached DOM element references for performance
-const views = {
-    table: document.getElementById('dataset-table'),
-    turtle: document.getElementById('turtle-view'),
-    rdfxml: document.getElementById('rdfxml-view'),
-    ntriples: document.getElementById('ntriples-view'),
-    nquads: document.getElementById('nquads-view')
-};
-const buttons = {
-    load: document.getElementById('load-data'),
-    download: document.getElementById('download'),
-    toggleTable: document.getElementById('toggle-table'),
-    toggleTurtle: document.getElementById('toggle-turtle'),
-    toggleRdfxml: document.getElementById('toggle-rdfxml'),
-    toggleNtriples: document.getElementById('toggle-ntriples'),
-    toggleNquads: document.getElementById('toggle-nquads')
-};
-const urlInput = document.getElementById('data-url');
+// Cached DOM element references for performance (initialized when DOM is ready)
+let views = null;
+let buttons = null;
+let urlInput = null;
+
+function initializeDOMReferences() {
+    views = {
+        table: document.getElementById('dataset-table'),
+        turtle: document.getElementById('turtle-view'),
+        rdfxml: document.getElementById('rdfxml-view'),
+        ntriples: document.getElementById('ntriples-view'),
+        nquads: document.getElementById('nquads-view')
+    };
+    buttons = {
+        load: document.getElementById('load-data'),
+        download: document.getElementById('download'),
+        toggleTable: document.getElementById('toggle-table'),
+        toggleTurtle: document.getElementById('toggle-turtle'),
+        toggleRdfxml: document.getElementById('toggle-rdfxml'),
+        toggleNtriples: document.getElementById('toggle-ntriples'),
+        toggleNquads: document.getElementById('toggle-nquads')
+    };
+    urlInput = document.getElementById('data-url');
+
+    // Setup event listeners after DOM references are cached
+    buttons.toggleTable.addEventListener('click', function () {
+        showView('table');
+    });
+    buttons.toggleTurtle.addEventListener('click', function () {
+        showView('turtle');
+    });
+    buttons.toggleRdfxml.addEventListener('click', function () {
+        showView('rdfxml');
+    });
+    buttons.toggleNtriples.addEventListener('click', function () {
+        showView('ntriples');
+    });
+    buttons.toggleNquads.addEventListener('click', function () {
+        showView('nquads');
+    });
+    buttons.download.addEventListener('click', function () {
+        downloadCurrent();
+    });
+}
 
 function isJSONLD(obj) {
     return obj && (obj['@context'] || obj['@type']);
@@ -214,26 +240,6 @@ function jsonldToNQuads(data) {
         });
 }
 
-// UI Toggles
-buttons.toggleTable.addEventListener('click', function () {
-    showView('table');
-});
-buttons.toggleTurtle.addEventListener('click', function () {
-    showView('turtle');
-});
-buttons.toggleRdfxml.addEventListener('click', function () {
-    showView('rdfxml');
-});
-buttons.toggleNtriples.addEventListener('click', function () {
-    showView('ntriples');
-});
-buttons.toggleNquads.addEventListener('click', function () {
-    showView('nquads');
-});
-buttons.download.addEventListener('click', function () {
-    downloadCurrent();
-});
-
 function showView(format) {
     if (!jsonldData) return;
     views.table.style.display = 'none';
@@ -315,6 +321,7 @@ function downloadCurrent() {
 }
 
 function initializeApp() {
+    initializeDOMReferences();
     const defaultUrl = urlInput ? urlInput.value.trim() : '';
     if (defaultUrl) {
         loadData(defaultUrl);
