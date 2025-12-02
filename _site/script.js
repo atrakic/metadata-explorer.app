@@ -1,4 +1,4 @@
-// Detect URLs in strings
+// --- Utility: Render values in HTML table ---
 function linkify(str) {
     if (typeof str === "string" && str.match(/^(https?:\/\/[^\s]+)$/)) {
         return `<a href="${str}" target="_blank" rel="noopener">${str}</a>`;
@@ -6,7 +6,6 @@ function linkify(str) {
     return str;
 }
 
-// Recursively create table for the data
 function renderValue(val) {
     if (typeof val === "string" || typeof val === "number" || typeof val === "boolean") {
         return linkify(String(val));
@@ -17,12 +16,9 @@ function renderValue(val) {
         }
         else if (val.every(e => typeof e === "object" && e !== null)) {
             const allKeys = Array.from(new Set(val.flatMap(obj => Object.keys(obj))));
-            let subTable = `<table class="json-sub-table"><thead><tr>${allKeys.map(k => `<th>${k}</th>`).join('')
-                }</tr></thead><tbody>`;
+            let subTable = `<table class="json-sub-table"><thead><tr>${allKeys.map(k => `<th>${k}</th>`).join('')}</tr></thead><tbody>`;
             val.forEach(obj => {
-                subTable += '<tr>' +
-                    allKeys.map(k => `<td>${renderValue(obj[k]) ?? ""}</td>`).join('') +
-                    '</tr>';
+                subTable += '<tr>' + allKeys.map(k => `<td>${renderValue(obj[k]) ?? ""}</td>`).join('') + '</tr>';
             });
             subTable += "</tbody></table>";
             return subTable;
@@ -40,21 +36,24 @@ function renderValue(val) {
     }
 }
 
-// Fetch and render the JSON-LD data from the local file
+// --- App state ---
 let jsonldData = null;
 
+// --- Load JSON-LD and render table ---
 function loadData(url) {
     console.log('URL argument received:', url);
 
     const loadBtn = document.getElementById('load-data');
     const tableView = document.getElementById('dataset-table');
     const turtleView = document.getElementById('turtle-view');
-
+    const rdfxmlView = document.getElementById('rdfxml-view');
     loadBtn.disabled = true;
     loadBtn.textContent = 'Loading...';
     tableView.innerHTML = 'Loading...';
     turtleView.style.display = 'none';
+    rdfxmlView.style.display = 'none';
     document.getElementById('toggle-format').textContent = 'Show Turtle Format';
+    document.getElementById('toggle-rdfxml').textContent = 'Show RDF/XML Format';
 
     fetch(url)
         .then(response => response.json())
@@ -69,6 +68,9 @@ function loadData(url) {
             tableView.innerHTML = html;
             loadBtn.disabled = false;
             loadBtn.textContent = 'Load Data';
+            tableView.style.display = 'block';
+            turtleView.style.display = 'none';
+            rdfxmlView.style.display = 'none';
         })
         .catch(err => {
             tableView.textContent = 'Failed to load data! Check the URL and try again.';
@@ -78,11 +80,10 @@ function loadData(url) {
         });
 }
 
-// Load default data on page load if URL is provided in input
+// --- On page load, if a default URL is present ---
 function initializeApp() {
     const urlInput = document.getElementById('data-url');
     const defaultUrl = urlInput ? urlInput.value.trim() : '';
-
     if (defaultUrl) {
         loadData(defaultUrl);
     }
@@ -95,7 +96,7 @@ if (document.readyState === 'loading') {
     initializeApp();
 }
 
-// Load button event listener
+// --- Load button event listener ---
 document.getElementById('load-data').addEventListener('click', function () {
     const url = document.getElementById('data-url').value.trim();
     if (url) {
@@ -103,7 +104,7 @@ document.getElementById('load-data').addEventListener('click', function () {
     }
 });
 
-// Allow Enter key to load data
+// --- Enter key triggers loading ---
 document.getElementById('data-url').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
         const url = this.value.trim();
@@ -113,29 +114,25 @@ document.getElementById('data-url').addEventListener('keypress', function (e) {
     }
 });
 
-// Convert JSON-LD to Turtle format
+// --- JSON-LD to Turtle ---
 function jsonldToTurtle(data) {
     let turtle = '';
     const prefixes = {
         'schema': 'https://schema.org/',
         'csvw': 'https://www.w3.org/ns/csvw#'
     };
-
-    // Add prefixes
+    // Prefixes
     for (const [prefix, uri] of Object.entries(prefixes)) {
         turtle += `@prefix ${prefix}: <${uri}> .\n`;
     }
     turtle += '\n';
-
     // Main subject
     const type = data['@type'] || 'Resource';
     turtle += `<> a schema:${type} ;\n`;
-
-    // Add properties
+    // Properties
     const props = [];
     for (const [key, value] of Object.entries(data)) {
         if (key === '@context' || key === '@type') continue;
-
         const predicate = key.includes(':') ? key : `schema:${key}`;
         const valueStr = formatTurtleValue(value, '  ');
         props.push(`  ${predicate} ${valueStr}`);
@@ -144,18 +141,7 @@ function jsonldToTurtle(data) {
     return turtle;
 }
 
-// rdflib parses Turtle and serializes to RDF/XML 
-function turtleToRDFXML(turtleText) {
-    const $rdf = window.$rdf;
-    const store = $rdf.graph();
-    try {
-        $rdf.parse(turtleText, store, 'http://example.org/', 'text/turtle');
-        return $rdf.serialize(undefined, store, 'http://example.org/', 'application/rdf+xml');
-    } catch (e) {
-        return `Error converting to RDF/XML: ${e}`;
-    }
-}
-
+// --- Format Turtle values ---
 function formatTurtleValue(value, indent = '') {
     if (typeof value === 'string') {
         if (value.startsWith('http://') || value.startsWith('https://')) {
@@ -186,10 +172,26 @@ function formatTurtleValue(value, indent = '') {
     return '""';
 }
 
-// Toggle button functionality
+// --- Turtle to RDF/XML using rdflib.js ---
+function turtleToRDFXML(turtleText) {
+    if (!window.$rdf) {
+        return 'RDFLib not loaded!';
+    }
+    const $rdf = window.$rdf;
+    const store = $rdf.graph();
+    try {
+        $rdf.parse(turtleText, store, 'http://example.org/', 'text/turtle');
+        return $rdf.serialize(undefined, store, 'http://example.org/', 'application/rdf+xml');
+    } catch (e) {
+        return `Error converting to RDF/XML: ${e}`;
+    }
+}
+
+// --- Button: Toggle Turtle View ---
 document.getElementById('toggle-format').addEventListener('click', function () {
     const tableView = document.getElementById('dataset-table');
     const turtleView = document.getElementById('turtle-view');
+    const rdfxmlView = document.getElementById('rdfxml-view');
     const btn = this;
 
     if (turtleView.style.display === 'none' || turtleView.style.display === '') {
@@ -200,15 +202,20 @@ document.getElementById('toggle-format').addEventListener('click', function () {
         }
         turtleView.style.display = 'block';
         tableView.style.display = 'none';
+        rdfxmlView.style.display = 'none';
         btn.textContent = 'Show Table Format';
+        document.getElementById('toggle-rdfxml').textContent = 'Show RDF/XML Format';
     } else {
         // Show table format
         turtleView.style.display = 'none';
+        rdfxmlView.style.display = 'none';
         tableView.style.display = 'block';
         btn.textContent = 'Show Turtle Format';
+        document.getElementById('toggle-rdfxml').textContent = 'Show RDF/XML Format';
     }
 });
 
+// --- Button: Toggle RDF/XML View ---
 document.getElementById('toggle-rdfxml').addEventListener('click', function () {
     const tableView = document.getElementById('dataset-table');
     const turtleView = document.getElementById('turtle-view');
@@ -226,11 +233,13 @@ document.getElementById('toggle-rdfxml').addEventListener('click', function () {
         tableView.style.display = 'none';
         turtleView.style.display = 'none';
         btn.textContent = 'Show Table Format';
+        document.getElementById('toggle-format').textContent = 'Show Turtle Format';
     } else {
         // Show table format
         rdfxmlView.style.display = 'none';
         turtleView.style.display = 'none';
         tableView.style.display = 'block';
         btn.textContent = 'Show RDF/XML Format';
+        document.getElementById('toggle-format').textContent = 'Show Turtle Format';
     }
 });
