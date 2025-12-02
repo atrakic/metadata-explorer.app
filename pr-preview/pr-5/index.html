@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Json-LD explorer</title>
+</head>
+<body>
+    <div class="controls">
+        <input type="text" id="data-url" class="url-input" placeholder="Enter JSON-LD URL..." value="https://raw.githubusercontent.com/atrakic/jsonld-explorer.app/refs/heads/main/data/dataset.json">
+        <button id="load-data" class="load-btn">Load Data</button>
+        <button id="toggle-table" class="toggle-btn">Show Table</button>
+        <button id="toggle-turtle" class="toggle-btn">Show Turtle</button>
+        <button id="toggle-rdfxml" class="toggle-btn">Show RDF/XML</button>
+        <button id="toggle-ntriples" class="toggle-btn">Show N-Triples</button>
+        <button id="toggle-nquads" class="toggle-btn">Show N-Quads (JSONLD.js)</button>
+        <button id="download" class="toggle-btn" style="display:none;">Download</button>
+    </div>
+    <div id="dataset-table"></div>
+    <div id="turtle-view" class="format-view"></div>
+    <div id="rdfxml-view" class="format-view"></div>
+    <div id="ntriples-view" class="format-view"></div>
+    <div id="nquads-view" class="format-view"></div>
+    <script src="https://unpkg.com/rdflib@2.2.34/dist/rdflib.min.js"></script>
+    <script src="https://unpkg.com/jsonld@8.3.2/dist/jsonld.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
