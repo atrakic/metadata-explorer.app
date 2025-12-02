@@ -81,7 +81,7 @@ td a {
     cursor: not-allowed;
 }
 
-#turtle-view {
+.format-view {
     display: none;
     background: #f5f5f5;
     padding: 1em;
@@ -90,23 +90,7 @@ td a {
     margin-top: 1.5em;
 }
 
-#turtle-view pre {
-    margin: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-}
-
-#rdfxml-view {
-    display: none;
-    background: #f5f5f5;
-    padding: 1em;
-    border: 2px solid #444;
-    border-radius: 4px;
-    margin-top: 1.5em;
-}
-#rdfxml-view pre {
+.format-view pre {
     margin: 0;
     white-space: pre-wrap;
     word-wrap: break-word;
