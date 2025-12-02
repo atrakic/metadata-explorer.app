@@ -179,7 +179,12 @@ function jsonldToTurtle(data) {
     let turtle = '';
     const prefixes = {
         'schema': 'https://schema.org/',
-        'csvw': 'https://www.w3.org/ns/csvw#'
+        'csvw': 'https://www.w3.org/ns/csvw#',
+        'foaf': 'http://xmlns.com/foaf/0.1/',
+        'dcat': 'http://www.w3.org/ns/dcat#',
+        'sh': 'http://www.w3.org/ns/shacl#',
+        'rdf':  'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+        'rdfs': 'http://www.w3.org/2000/01/rdf-schema#'
     };
     for (const [prefix, uri] of Object.entries(prefixes)) {
         turtle += `@prefix ${prefix}: <${uri}> .\n`;
@@ -210,9 +215,18 @@ function formatTurtleValue(value, indent = '') {
         return value;
     } else if (Array.isArray(value)) {
         if (value.length === 0) return '()';
-        const items = value.map(v => formatTurtleValue(v, indent + '  ')).join(',\n' + indent + '  ');
-        return `(\n${indent}  ${items}\n${indent})`;
-    } else if (typeof value === 'object' && value !== null) {
+        // If array elements are primitives (not objects)
+        if (value.every(e => typeof e !== "object" || e === null)) {
+            // Turtle lists: space-separated values, NO commas!
+            const items = value.map(v => formatTurtleValue(v, indent + '  ')).join(' ');
+            return `(\n${indent}  ${items}\n${indent})`;
+        } else {
+            // If array contains objects, emit as multiple triples (e.g., multiple predicates)
+            // Usually used for multiple property values
+            // Suppose this is used in props.push ... so do property for each item
+            return value.map(v => formatTurtleValue(v, indent)).join(` ;\n${indent}`);
+        }
+    } else if (typeof value === "object" && value !== null) {
         if (value['@type']) {
             let result = `[\n${indent}  a schema:${value['@type']}`;
             for (const [k, v] of Object.entries(value)) {
@@ -223,7 +237,8 @@ function formatTurtleValue(value, indent = '') {
             result += `\n${indent}]`;
             return result;
         }
-        return JSON.stringify(value);
+        // Fallback: plain object, not LD, show as string literal for now
+        return `"${JSON.stringify(value).replace(/"/g, '\\"')}"`;
     }
     return '""';
 }
