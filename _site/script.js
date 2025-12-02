@@ -96,6 +96,20 @@ function initializeDOMReferences() {
     buttons.download.addEventListener('click', function () {
         downloadCurrent();
     });
+    buttons.load.addEventListener('click', function () {
+        const url = urlInput.value.trim();
+        if (url) {
+            loadData(url);
+        }
+    });
+    urlInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            const url = this.value.trim();
+            if (url) {
+                loadData(url);
+            }
+        }
+    });
 }
 
 function isJSONLD(obj) {
