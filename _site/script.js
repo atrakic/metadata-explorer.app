@@ -1,4 +1,3 @@
-// Utility: Render values in HTML table
 function linkify(str) {
     if (typeof str === "string" && str.match(/^(https?:\/\/[^\s]+)$/)) {
         return `<a href="${str}" target="_blank" rel="noopener">${str}</a>`;
@@ -36,12 +35,25 @@ function renderValue(val) {
     }
 }
 
-// App state
 let jsonldData = null;
 let currentFormat = 'table';
 let formatCache = {};
 
-// Load JSON-LD and render table
+function isJSONLD(obj) {
+    return obj && (obj['@context'] || obj['@type']);
+}
+
+// Default context/type for plain JSON
+function genericLinkedData(obj) {
+    return {
+        "@context": {
+            "schema": "https://schema.org/"
+        },
+        "@type": "Resource",
+        ...obj
+    };
+}
+
 function loadData(url) {
     const loadBtn = document.getElementById('load-data');
     const tableView = document.getElementById('dataset-table');
@@ -62,8 +74,9 @@ function loadData(url) {
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            jsonldData = data;
-            formatCache = {}; // Reset cache
+            // If plain JSON, wrap with generic Linked Data semantics
+            jsonldData = isJSONLD(data) ? data : genericLinkedData(data);
+            formatCache = {};
             let html = '<table>';
             html += '<thead><tr><th>Key</th><th>Value</th></tr></thead><tbody>';
             Object.entries(data).forEach(([key, val]) => {
@@ -80,6 +93,10 @@ function loadData(url) {
             nquadsView.style.display = 'none';
             currentFormat = 'table';
             document.getElementById('download').style.display = 'none';
+            // Always enable all toggles, since generic semantics are applied
+            ['toggle-turtle','toggle-rdfxml','toggle-ntriples','toggle-nquads'].forEach(id =>
+                document.getElementById(id).disabled = false
+            );
         })
         .catch(err => {
             tableView.textContent = 'Failed to load data! Check the URL and try again.';
@@ -89,39 +106,6 @@ function loadData(url) {
         });
 }
 
-// On page load, if a default URL is present
-function initializeApp() {
-    const urlInput = document.getElementById('data-url');
-    const defaultUrl = urlInput ? urlInput.value.trim() : '';
-    if (defaultUrl) {
-        loadData(defaultUrl);
-    }
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-    initializeApp();
-}
-
-// UI events
-document.getElementById('load-data').addEventListener('click', function () {
-    const url = document.getElementById('data-url').value.trim();
-    if (url) {
-        loadData(url);
-    }
-});
-
-document.getElementById('data-url').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        const url = this.value.trim();
-        if (url) {
-            loadData(url);
-        }
-    }
-});
-
-// Conversion functions
 function jsonldToTurtle(data) {
     let turtle = '';
     const prefixes = {
@@ -175,7 +159,7 @@ function formatTurtleValue(value, indent = '') {
     return '""';
 }
 
-// RDFLib conversion (Turtle to RDF/XML/N-Triples)
+// RDFLib conversion
 function turtleToRDF(format) {
     if (!window.$rdf) {
         return 'RDFLib not loaded!';
@@ -296,7 +280,6 @@ function downloadCurrent() {
     URL.revokeObjectURL(url);
 }
 
-// On page load
 function initializeApp() {
     const urlInput = document.getElementById('data-url');
     const defaultUrl = urlInput ? urlInput.value.trim() : '';
