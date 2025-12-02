@@ -235,15 +235,11 @@ function turtleToRDF(format) {
 // JSONLD.js: JSON-LD to N-Quads
 function jsonldToNQuads(data) {
     if (!window.jsonld) {
-        return 'jsonld.js not loaded!';
+        return Promise.resolve('jsonld.js not loaded!');
     }
-    window.jsonld.toRDF(data, { format: 'application/n-quads' })
-        .then(nquads => {
-            views.nquads.innerHTML = `<pre>${nquads}</pre>`;
-        })
-        .catch(err => {
-            views.nquads.innerHTML = `<pre>Error converting: ${err}</pre>`;
-        });
+    return window.jsonld.toRDF(data, { format: 'application/n-quads' })
+        .then(nquads => nquads)
+        .catch(err => `Error converting: ${err}`);
 }
 
 function showView(format) {
