@@ -292,13 +292,21 @@ function showView(format) {
             nquadsPre.textContent = formatCache.nquads;
         } else {
             nquadsPre.textContent = 'Loading...';
-            jsonldToNQuads(jsonldData).then(nquads => {
-                formatCache.nquads = nquads;
-                // Only update if still on nquads view to prevent visual glitches
-                if (currentFormat === 'nquads') {
-                    nquadsPre.textContent = nquads;
-                }
-            });
+            jsonldToNQuads(jsonldData)
+                .then(nquads => {
+                    formatCache.nquads = nquads;
+                    // Only update if still on nquads view to prevent visual glitches
+                    if (currentFormat === 'nquads') {
+                        nquadsPre.textContent = nquads;
+                    }
+                })
+                .catch(err => {
+                    const errorMsg = `Error converting: ${err}`;
+                    formatCache.nquads = errorMsg;
+                    if (currentFormat === 'nquads') {
+                        nquadsPre.textContent = errorMsg;
+                    }
+                });
         }
         views.nquads.style.display = 'block';
     }
