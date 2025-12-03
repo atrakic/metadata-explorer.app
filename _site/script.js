@@ -326,7 +326,11 @@ class JSONLDExplorer {
             // Handle async nquads loading
             this.handleAsyncNQuads(pre);
         } else {
-            pre.textContent = content;
+            // Decode HTML entities for RDF/XML and other formats that might contain them
+            const decodedContent = ['rdfxml', 'turtle', 'ntriples'].includes(format)
+                ? utils.decodeHtmlEntities(content)
+                : content;
+            pre.textContent = decodedContent;
         }
     }
 
