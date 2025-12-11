@@ -228,6 +228,11 @@ class JSONLDExplorer {
             this.updateButtonStates();
             this.setLoadingState(false);
 
+            // Add structured data for SEO as per Google's guidelines
+            if (window.addStructuredData && this.data) {
+                window.addStructuredData(this.data);
+            }
+
         } catch (error) {
             views.table.textContent = 'Failed to load data! Check the URL and try again.';
             console.error(error);

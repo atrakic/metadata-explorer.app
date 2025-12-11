@@ -24,7 +24,7 @@ jobs:
       - name: Deploy PR Preview
         uses: rossjrw/pr-preview-action@v1.4.8
         with:
-          source-dir: _site
+          source-dir: src
           preview-branch: gh-pages
           umbrella-dir: pr-preview
           action: auto

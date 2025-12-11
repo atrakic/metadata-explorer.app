@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Json-LD explorer</title>
+</head>
+
+<body>
+    <div class="controls">
+        <input type="text" id="data-url" class="url-input" placeholder="Enter JSON-LD URL..."
+            value="https://raw.githubusercontent.com/atrakic/jsonld-explorer.app/refs/heads/main/data/dataset.json">
+        <button id="load-data" class="load-btn">Load Data</button>
+        <button id="toggle-table" class="toggle-btn">Show Table</button>
+        <button id="toggle-turtle" class="toggle-btn">Show Turtle</button>
+        <button id="toggle-rdfxml" class="toggle-btn">Show RDF/XML</button>
+        <button id="toggle-ntriples" class="toggle-btn">Show N-Triples</button>
+        <button id="toggle-nquads" class="toggle-btn">Show N-Quads (JSONLD.js)</button>
+        <button id="download" class="toggle-btn" style="display:none;">Download</button>
+    </div>
+
+    <div id="dataset-table"></div>
+    <div id="turtle-view" class="format-view"></div>
+    <div id="rdfxml-view" class="format-view"></div>
+    <div id="ntriples-view" class="format-view"></div>
+    <div id="nquads-view" class="format-view"></div>
+
+    <script src="https://unpkg.com/rdflib@2.2.34/dist/rdflib.min.js"></script>
+    <script src="https://unpkg.com/jsonld@8.3.2/dist/jsonld.min.js"></script>
+    <script src="script.js"></script>
+
+    <script>
+        // Generate structured data dynamically as per Google's guidelines
+        // https://developers.google.com/search/docs/appearance/structured-data/generate-structured-data-with-javascript
+        function addStructuredData(jsonldData) {
+            // Remove any existing structured data script
+            const existingScript = document.querySelector('script[type="application/ld+json"]');
+            if (existingScript) {
+                existingScript.remove();
+                console.log('Removed existing structured data');
+            }
+
+            // Only add if it's valid JSON-LD
+            if (jsonldData && (jsonldData['@context'] || jsonldData['@type'])) {
+                const script = document.createElement('script');
+                script.setAttribute('type', 'application/ld+json');
+                const structuredDataJson = JSON.stringify(jsonldData, null, 2);
+                script.textContent = structuredDataJson;
+                document.head.appendChild(script);
+                console.log('Added structured data to <head>:', jsonldData);
+                console.log('Check Elements tab → head → script[type="application/ld+json"]');
+
+                // Show the structured data in the UI
+                const showButton = document.getElementById('show-structured-data');
+                const structuredDataContent = document.getElementById('structured-data-content');
+                if (showButton && structuredDataContent) {
+                    showButton.style.display = 'inline-block';
+                    structuredDataContent.textContent = structuredDataJson;
+
+                    // Add click handler to show/hide structured data view
+                    showButton.onclick = function () {
+                        const view = document.getElementById('structured-data-view');
+                        const allViews = document.querySelectorAll('#dataset-table, .format-view');
+                        allViews.forEach(v => v.style.display = 'none');
+                        view.style.display = 'block';
+                    };
+                }
+            } else {
+                console.log('Data is not valid JSON-LD, skipping structured data generation');
+                const showButton = document.getElementById('show-structured-data');
+                if (showButton) showButton.style.display = 'none';
+            }
+        }
+
+        // Make the function globally available for the JSONLDExplorer
+        window.addStructuredData = addStructuredData;
+    </script>
+</body>
+
+</html>
